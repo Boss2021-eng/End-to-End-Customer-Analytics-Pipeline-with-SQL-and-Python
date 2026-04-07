@@ -1,0 +1,180 @@
+-- ADVANCED ANALYSIS
+-- Change over time trend 
+-- How a measure evolves over time
+-- Total sales by year
+-- Average cost by month
+
+-- Total sales by the year
+SELECT 
+	year(order_date) AS order_year,
+    SUM(sales_amount) AS total_sales,
+    count(DISTINCT customer_key) AS total_customers,
+    SUM(quantity) AS total_quantity
+FROM dw_gold.facts_sales
+WHERE order_date IS NOT NULL
+GROUP BY year(order_date)
+ORDER BY year(order_date);
+
+-- Total sales by the year and month (granularity of the month)
+SELECT 
+    DATE_FORMAT(order_date, '%b-%Y') AS order_year_month,
+    SUM(sales_amount) AS total_sales,
+    COUNT(DISTINCT customer_key) AS total_customers,
+    SUM(quantity) AS total_quantity
+FROM dw_gold.facts_sales
+WHERE order_date IS NOT NULL
+GROUP BY 
+    -- Group by both the label and the raw month for accuracy
+    order_year_month, 
+    EXTRACT(YEAR_MONTH FROM order_date)
+ORDER BY 
+    -- This ensures 2025 comes before 2026, and Jan comes before Feb
+    EXTRACT(YEAR_MONTH FROM order_date) ASC;
+
+-- CUMULATIVE ANALYSIS
+-- Cumulative measures by dimensions
+-- Running total sales by year
+-- Moving averages by month
+
+-- Total (Cumulation) sales by the year and month (granularity of the month)
+SELECT 
+	order_year_month,
+	total_sales,
+    SUM(total_sales) OVER (ORDER BY order_year_month) AS total_by_year
+    
+FROM 
+(SELECT 
+    DATE_FORMAT(order_date, '%b-%Y') AS order_year_month,
+    EXTRACT(YEAR FROM order_date) AS order_year,
+    SUM(sales_amount) AS total_sales,
+    COUNT(DISTINCT customer_key) AS total_customers,
+    SUM(quantity) AS total_quantity
+FROM dw_gold.facts_sales
+WHERE order_date IS NOT NULL
+GROUP BY 
+    -- Group by both the label and the raw month for accuracy
+    order_year_month, 
+    EXTRACT(YEAR_MONTH FROM order_date),
+    EXTRACT(YEAR FROM order_date) 
+ORDER BY 
+    -- This ensures 2025 comes before 2026, and Jan comes before Feb
+    EXTRACT(YEAR_MONTH FROM order_date),
+    EXTRACT(YEAR FROM order_date) 
+) t;
+
+-- Total sales (granuarity of year)
+SELECT 
+	order_year,
+	total_sales,
+    SUM(total_sales) OVER (ORDER BY order_year) AS running_total_sales  
+FROM 
+(SELECT 
+    EXTRACT(YEAR FROM order_date) AS order_year,
+    SUM(sales_amount) AS total_sales,
+    
+    COUNT(DISTINCT customer_key) AS total_customers,
+    SUM(quantity) AS total_quantity
+FROM dw_gold.facts_sales
+WHERE order_date IS NOT NULL
+GROUP BY 
+    -- Group by both the label and the raw month for accuracy
+    EXTRACT(YEAR FROM order_date) 
+ORDER BY 
+    -- This ensures 2025 comes before 2026, and Jan comes before Feb
+    EXTRACT(YEAR FROM order_date) 
+) t;
+
+-- MOVING AVERAGE OF PRICE
+SELECT 
+	order_year,
+	total_sales,
+    SUM(total_sales) OVER (ORDER BY order_year) AS running_total_sales,  
+    average_price,
+    AVG(average_price) OVER (ORDER BY order_year) AS moving_average
+FROM 
+(SELECT 
+    EXTRACT(YEAR FROM order_date) AS order_year,
+    SUM(sales_amount) AS total_sales,
+    AVG(price) AS average_price,
+    COUNT(DISTINCT customer_key) AS total_customers,
+    SUM(quantity) AS total_quantity
+FROM dw_gold.facts_sales
+WHERE order_date IS NOT NULL
+GROUP BY 
+    -- Group by both the label and the raw month for accuracy
+    EXTRACT(YEAR FROM order_date) 
+ORDER BY 
+    -- This ensures 2025 comes before 2026, and Jan comes before Feb
+    EXTRACT(YEAR FROM order_date) 
+) t;
+
+-- PERFORMANCE ANALYSIS
+-- Analyze the yearly performance of products by comparing their sales to
+-- both the average sales performance of the product and the previous yearly sales
+WITH Sales_details AS (
+SELECT 
+	YEAR(s.order_date) AS order_year,
+    p.product_name,
+    SUM(s.sales_amount) AS current_sales
+FROM dw_gold.facts_sales s
+LEFT JOIN dw_gold.dim_products p
+ON s.product_key = p.product_key
+GROUP BY YEAR(s.order_date),
+p.product_name)
+
+SELECT 
+	order_year,
+    product_name,
+    current_sales,
+    AVG(current_sales) OVER (PARTITION BY product_name) AS average_sales,
+    current_sales - AVG(current_sales) OVER (PARTITION BY product_name) AS diff,
+    CASE 
+		WHEN  current_sales - AVG(current_sales) OVER (PARTITION BY product_name) < 0 THEN "below average"
+        WHEN  current_sales - AVG(current_sales) OVER (PARTITION BY product_name) > 0 THEN "above average"
+	END AS yearly_status,
+    LAG(current_sales) OVER (PARTITION BY product_name ORDER BY order_year) AS previous_sales,
+    current_sales - LAG(current_sales) OVER (PARTITION BY product_name ORDER BY order_year) AS yearly_diff,
+     CASE 
+		WHEN  current_sales - LAG(current_sales) OVER (PARTITION BY product_name ORDER BY order_year) < 0 THEN "decreasing"
+        WHEN  current_sales - LAG(current_sales) OVER (PARTITION BY product_name ORDER BY order_year) > 0 THEN "increasing"
+	END AS yearly_change
+FROM sales_details;
+
+-- PROPORTIONAL ANALYSIS
+-- Categories of products that contributes to overall sales
+WITH product_category AS (SELECT 
+p.category,
+SUM(s.sales_amount)  total_sales
+FROM dw_gold.dim_products p
+LEFT JOIN dw_gold.facts_sales s
+ON p.product_key = s.product_key
+WHERE s.sales_amount IS NOT NULL
+GROUP BY p.category)
+
+SELECT 
+	category,
+    total_sales,
+    Round((total_sales / (SUM(total_sales) OVER ()))*100, 2) percentage
+FROM product_category;
+
+-- Customer segmentation 
+-- categorize customers by spender
+WITH spending_category AS (SELECT 
+	c.customer_key,
+	SUM(s.sales_amount) total_spending_amount,
+    CASE 
+		WHEN SUM(s.sales_amount) < 1000 THEN "low spender"
+        WHEN SUM(s.sales_amount) BETWEEN 1000 AND 5000 THEN "medium spender"
+        WHEN SUM(s.sales_amount) > 5000 THEN "high spender"
+	END AS spender_category
+FROM dw_gold.facts_sales s
+LEFT JOIN dw_gold.dim_customers c
+ON c.customer_key = s.customer_key
+GROUP BY c.customer_key)
+
+SELECT 
+	spender_category,
+    count(spender_category) AS count_num
+FROM spending_category
+GROUP BY spender_category
+ORDER BY count(spender_category) DESC;
