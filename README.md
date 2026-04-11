@@ -202,7 +202,77 @@ FROM customer_aggregation
 );
 ```
 ---
+## Python-Powered Insights & Business Intelligence
 
+This document presents **14 key business questions** answered using **Python** (pandas, plotly, seaborn, matplotlib) on the `dw_gold.report_customers` view.
+
+All analysis was performed in Jupyter Notebooks under the `python` folder with insights from the analysis noted.
+
+---
+
+### A. Revenue and Profitability Insights
+
+#### Question 1: Which `age_category` generates the highest `total_sales`?
+#### Insight 1: The 40-60 age category generates the highest total sales.
+This is your primary revenue-driving demographic — prioritize targeted marketing here.
+
+####  Question 2: What is the relationship between spender_category and average_order_value (AOV)?
+nsight 2: High Spenders have an AOV of $2,592 — nearly 28 times higher than Low Spenders, despite fewer orders.
+High Spenders focus on premium/luxury purchases, while Low Spenders drive volume (nearly 14,000 low-value transactions).
+
+### Question 3: How does `average_monthly_spend` differ across various `age_categories`?
+#### Insight 3: The 40-60 age group has the highest average monthly spend at $10.66.
+The 20-40 age group follows closely at $8.20 – $9.17. This group should be prioritized for retention and upselling.
+
+#### Question 4: Are customers with a high `total_products` count also those with the highest `total_sales`?
+#### Insight 4: Revenue is primarily driven by high-value luxury buyers rather than high-volume bulk buyers.
+
+#### Question 5: Which `spender_category` has the highest `total_quantities` per order?
+#### Insight 5: High Spenders have the highest average quantity per order.
+They are your power users who move the most inventory.
+
+#### Question 6: What is the average `recency` for each `spender_category`?
+#### Insight 6: High Spenders show varying recency levels.
+This metric helps identify at-risk VIP customers early for retention campaigns.
+
+#### Question 7: Is there a correlation between `life_span` and `total_sales`?
+#### Insight 7: There is a strong positive correlation between customer lifespan and total sales.
+Longer loyalty significantly increases customer value.
+
+#### Question 8: Who are the "at-risk" champions (High `total_sales` but `recency` > 160 days)?
+#### Insight 8: There are 282 At-Risk Champions (high-value customers inactive for over 160 days) and 4,492 Active High Spenders.
+These 282 customers should be targeted with win-back campaigns.
+
+#### Question 9:  Is the "Senior" age_category more likely to be a "Low" or "High" spender?
+#### Insight 9: High Spenders are typically 35–45 years old on average.
+Senior customers (Above 60) are more likely to be Low Spenders.
+
+#### Question 10: How does `last_order_date` trend over time (Month-over-Month)?
+#### Insight 10: The last_order_date remained stagnant below 100 users until a late-2012 breakout, followed by consistent MoM growth to a peak of 2,000+ users in December 2013.
+<p align="center">
+  <img width="820" height="393" alt="image" src="https://github.com/user-attachments/assets/7404f5cc-4fc5-4c0a-8ccf-a65d54787df8" />
+</p>
+
+#### Question 11: Which `spender_category` buys the most diverse range of `total_products`?
+#### Insight 11: The 40-60 age category buys the most variety of products.
+This indicates strong cross-selling success in this segment.
+
+#### Question 12: Does a high `life_span` result in a higher `average_monthly_spend`?
+#### Insight 12: High spending customers show peak activity between 145–165 days of lifespan.
+Beyond this period, customers either churn or spend less.
+
+#### Question 13: What percentage of revenue is contributed by the top 10% of customers (by `total_sales`)?
+#### Insight 13: The top 10% of customers (4,763 customers) contribute $11,531,461 representing 40.56% of total revenue ($28,429,761).
+This indicates high customer concentration risk.
+
+#### Question 14: What is the "Revenue Velocity" (`total_sales` divided by `life_span`)?
+#### Insight 14: 
+<p align="center">
+  <img width="589" height="385" alt="image" src="https://github.com/user-attachments/assets/57d515f2-be75-40c2-b0d5-01b3abe36281" />
+</p>
+The Average Revenue Velocity chart highlights a tiered spending structure, where high spenders generate a dominant $42.62/day compared to just $0.67/day for low spenders. This revenue disparity has revealed that the business is highly dependent on a top-tier group, making their retention the primary driver for sustainable growth.
+  
+---
 ## ✨ Key Insights
 
 ### 1. Revenue Drivers
@@ -216,15 +286,26 @@ FROM customer_aggregation
 | Medium Spender   | Medium            | Majority of base |
 | Low Spender      | Lowest            | Needs nurturing |
 
-### 3. Strategic Recommendations
-- **Target 40-60 age group** with premium offers and loyalty programs.
-- Develop **reactivation campaigns** for high-recency (inactive) high-spenders.
-- Focus on increasing **average order value** for medium spenders.
-- Use **revenue velocity** (`total_sales / life_span`) as a key KPI for customer prioritization.
+---
+
+## 💡 Strategic Recommendations
+
+- 🎯 **Target High-Value Age Segment (40–60)**  
+  Focus marketing efforts on the 40–60 age group through premium offers, personalized experiences, and loyalty programs to maximize lifetime value.
+
+- 🔄 **Reactivation of Inactive High Spenders**  
+  Develop targeted re-engagement campaigns for customers with high recency but strong historical spending to recover lost revenue.
+
+- 📈 **Increase Average Order Value (AOV)**  
+  Implement upselling and cross-selling strategies to move medium spenders toward higher value segments.
+
+- ⚡ **Adopt Revenue Velocity as a KPI**  
+  Utilize **revenue velocity** (`total_sales / life_span`) to identify and prioritize high-performing customers for strategic decision-making.
 
 ---
 
-## 🛠 Tech Stack
+---
+
 
 
 
