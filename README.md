@@ -13,8 +13,17 @@ The analysis focuses on:
 - Customer lifetime metrics (recency, lifespan, velocity)
 - Revenue insights and strategic recommendations
 
+The analysis in the SQL are divided into
+1. Exploratory analysis
+  Under the exploratory analysis
+we have
+-- Database Exploration
+-- 
+3. Intermediate analysis
+4. Advanced analysis
 ---
 
+The visualization are done with Python while asking some crucial questions
 ## ✨ Key Insights
 
 ### 1. Revenue Drivers
