@@ -27,7 +27,7 @@ The goal is to derive actionable business insights through descriptive, diagnost
 ---
 ## 🛠️ Tools and Technologies
 
-- **Database**: MySQL / MariaDB (v8.0) – Data storage, exploration, and querying  
+- **Database**: MySQL (v8.0) – Data storage, exploration, and querying  
 - **Data Architecture**: Bronze → Silver → Gold layered Data Warehouse  
 - **Language**: SQL – Data extraction, transformation, and analysis  
 - **ETL Process**: Custom SQL-based transformations for data cleaning and modeling  
